@@ -212,12 +212,11 @@ In addition, `listener`s
     ```
   * Java
     ```java
-      TestDomain.ReplierTopic1.TestObjectObjectToString.replier2((context, it) -> {
+      TestDomain.ReplierTopic1.TestObjectObjectToString.replier((context, it) -> {
          // context.get(propertyKey)
          return it.getObj().getText();
       });
     ```
-    * **NOTE**: currently, you need to use `replier2` in Java
 
 ## Configuration
 

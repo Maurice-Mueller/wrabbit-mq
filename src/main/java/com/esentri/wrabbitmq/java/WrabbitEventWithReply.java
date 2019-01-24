@@ -1,16 +1,15 @@
 package com.esentri.wrabbitmq.java;
 
+import com.esentri.wrabbitmq.WrabbitConfigKt;
 import com.esentri.wrabbitmq.WrabbitTopic;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function2;
 
 import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class WrabbitEventWithReply<MESSAGE extends Serializable, REPLY extends Serializable> extends com.esentri.wrabbitmq.WrabbitEventWithReply<MESSAGE, REPLY> {
    public WrabbitEventWithReply(WrabbitTopic wrabbitTopic, String eventName) {
@@ -42,8 +41,8 @@ public class WrabbitEventWithReply<MESSAGE extends Serializable, REPLY extends S
       });
    }
 
-   public void replier2(BiFunction<Map<String, ?>, MESSAGE, REPLY> replier) {
-      Function2<Map<String, ?>, MESSAGE, REPLY> function2 = replier::apply;
-      this.replier(function2);
+   public CompletableFuture<REPLY> sendAndReceive(MESSAGE message) {
+      return this.sendAndReceive(message, WrabbitConfigKt.WrabbitReplyTimeout());
    }
+
 }

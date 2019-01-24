@@ -31,14 +31,13 @@ open class WrabbitEvent<MESSAGE : Serializable>(val wrabbitTopic: WrabbitTopic, 
       val queueName = "${wrabbitTopic.topicName}.$eventName.LISTENER.$group"
       newChannel.queueDeclare(queueName, true, false, false, emptyMap())
       newChannel.queueBind(queueName, wrabbitTopic.topicName, "", standardListenerHeadersForEvent)
-      newChannel.basicConsume(queueName, true, WrabbitConsumerSimple(newChannel, listener, queueName))
+      newChannel.basicConsume(queueName, true, WrabbitConsumerSimple(newChannel, listener))
    }
 
    private fun listenerHeadersForEvent(): Map<String, Any?> {
       val headers: MutableMap<String, Any?> = HashMap()
       headers["x-match"] = "all"
-      headers[eventName] = null
-      headers[WrabbitHeader.LISTENER.key] = null
+      headers[WrabbitHeader.EVENT.key] = eventName
       return headers
    }
 

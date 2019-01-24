@@ -13,7 +13,7 @@ open class WrabbitEventWithReply<MESSAGE: Serializable, RETURN: Serializable>(
 
    override fun messageBuilder() = WrabbitMessageBuilderReplier<MESSAGE, RETURN>(wrabbitTopic.topicName, super.standardSendingProperties)
 
-   fun sendAndReceive(message: MESSAGE): CompletableFuture<RETURN> =
+   fun sendAndReceive(message: MESSAGE, timeoutMS: Long = WrabbitReplyTimeout()): CompletableFuture<RETURN> =
       SendAndReceiveMessage(wrabbitTopic.topicName,
          super.standardSendingProperties,
          message)
@@ -27,14 +27,13 @@ open class WrabbitEventWithReply<MESSAGE: Serializable, RETURN: Serializable>(
       val queueName = "${wrabbitTopic.topicName}.$eventName.REPLIER"
       newChannel.queueDeclare(queueName, true, true, false, emptyMap())
       newChannel.queueBind(queueName, wrabbitTopic.topicName, "", replierHeadersForEvent())
-      newChannel.basicConsume(queueName, false, WrabbitConsumerReplier(newChannel, replier, queueName))
+      newChannel.basicConsume(queueName, false, WrabbitConsumerReplier(newChannel, replier))
    }
 
    private fun replierHeadersForEvent(): MutableMap<String, Any?> {
       val headers: MutableMap<String, Any?> = HashMap()
       headers["x-match"] = "all"
-      headers[eventName] = null
-      headers[WrabbitHeader.REPLIER.key] = null
+      headers[WrabbitHeader.EVENT.key] = eventName
       return headers
    }
 

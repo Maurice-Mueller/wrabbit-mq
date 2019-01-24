@@ -1,22 +1,17 @@
 package com.esentri.wrabbitmq.internal.consumer
 
-import com.esentri.wrabbitmq.connection.WrabbitHeader
-import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DefaultConsumer
+import com.rabbitmq.client.ShutdownSignalException
 
-abstract class WrabbitConsumerBase(val exculsiveChannel: Channel, val exclusiveQueueName: String): DefaultConsumer(exculsiveChannel) {
-   internal fun getContext(properties: AMQP.BasicProperties?): MutableMap<String, Any?> {
-      val context: MutableMap<String, Any?> = HashMap()
-      properties?.headers?.forEach { key, value ->
-         if (WrabbitHeader.isWrabbitHeader(key)) return@forEach
-         context[key] = value?.toString()
-      }
-      return context
+abstract class WrabbitConsumerBase(channel: Channel): DefaultConsumer(channel) {
+
+   override fun handleCancelOk(consumerTag: String?) {
+      throw RuntimeException("asdf")
    }
 
-//   fun finalize() {
-//      super.getChannel().queueDelete(exclusiveQueueName)
-//      super.getChannel().close()
-//   }
+   override fun handleShutdownSignal(consumerTag: String?, sig: ShutdownSignalException?) {
+      throw RuntimeException("asdf")
+   }
+
 }
