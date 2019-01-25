@@ -12,15 +12,19 @@ class WrabbitConsumerReplier<MESSAGE_TYPE, RETURN_TYPE>(channel: Channel,
 
    override fun handleDelivery(consumerTag: String?, envelope: Envelope, properties: AMQP.BasicProperties?, body: ByteArray?) {
       val message: MESSAGE_TYPE = WrabbitObjectConverter.byteArrayToObject(body!!)
-      val result = wrabbitReplier(properties!!.headers, message)
-      super.getChannel().basicPublish("",
-         properties.replyTo,
-         AMQP.BasicProperties
-            .Builder()
-            .correlationId(properties.correlationId)
-            .build(),
-         WrabbitObjectConverter.objectToByteArray(result!!))
-      //TODO replace with new NewChannel method
-      super.getChannel().basicAck(envelope.deliveryTag, false)
+      try {
+         val result = wrabbitReplier(properties!!.headers, message)
+         super.getChannel().basicPublish("",
+            properties.replyTo,
+            AMQP.BasicProperties
+               .Builder()
+               .correlationId(properties.correlationId)
+               .build(),
+            WrabbitObjectConverter.objectToByteArray(result!!))
+         //TODO replace with new NewChannel method
+         super.getChannel().basicAck(envelope.deliveryTag, false)
+      } catch (e: Exception) {
+         super.getChannel().basicNack(envelope.deliveryTag, false, false)
+      }
    }
 }
