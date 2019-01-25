@@ -10,7 +10,7 @@ import java.util.concurrent.CountDownLatch
 class ExceptionTest {
 
    private val topic = WrabbitTopic("TestTopic-Exception")
-   private fun <MESSAGE: Serializable, REPLY: Serializable> newEventWithReply() =
+   private fun <MESSAGE : Serializable, REPLY : Serializable> newEventWithReply() =
       NewEventWithReply<MESSAGE, REPLY>(topic)
 
    @Test

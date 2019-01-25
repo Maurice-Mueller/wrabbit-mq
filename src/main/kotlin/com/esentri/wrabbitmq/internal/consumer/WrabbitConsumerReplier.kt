@@ -2,6 +2,7 @@ package com.esentri.wrabbitmq.internal.consumer
 
 import com.esentri.wrabbitmq.WrabbitReplierWithContext
 import com.esentri.wrabbitmq.connection.WrabbitHeader
+import com.esentri.wrabbitmq.internal.ReplyLogger
 import com.esentri.wrabbitmq.internal.converter.WrabbitObjectConverter
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
@@ -17,18 +18,22 @@ class WrabbitConsumerReplier<MESSAGE_TYPE, RETURN_TYPE>(channel: Channel,
       try {
          val result = wrabbitReplier(properties!!.headers, message)
          sendAnswer(properties, responseByteArray(result))
-         super.getChannel().basicAck(envelope.deliveryTag, false)
       } catch (e: Exception) {
+         ReplyLogger.error("Error while processing received data on {}::{}",
+            properties!!.headers[WrabbitHeader.TOPIC.key],
+            properties!!.headers[WrabbitHeader.EVENT.key],
+            e)
          sendAnswer(properties!!, responseByteArray(e))
+      } finally {
          super.getChannel().basicAck(envelope.deliveryTag, false)
       }
    }
 
    private fun responseByteArray(result: RETURN_TYPE): ByteArray =
-      WrabbitObjectConverter.objectToByteArray(WrabbitReplyWrapperMessage(value = result))
+      WrabbitObjectConverter.objectToByteArray(WrabbitReplyMessage(value = result))
 
    private fun responseByteArray(exception: Exception): ByteArray =
-      WrabbitObjectConverter.objectToByteArray(WrabbitReplyWrapperMessage<RETURN_TYPE>(exception = exception))
+      WrabbitObjectConverter.objectToByteArray(WrabbitReplyMessage<RETURN_TYPE>(exception = exception))
 
 
    private fun sendAnswer(receivedProperties: AMQP.BasicProperties, body: ByteArray) {

@@ -7,8 +7,8 @@ import com.rabbitmq.client.AMQP
 class WrabbitBasicReplyException(sendingProperties: AMQP.BasicProperties, throwable: Throwable):
    RuntimeException(generateMessage(sendingProperties), throwable) {
    companion object {
-       fun generateMessage(sendingProperties: AMQP.BasicProperties) = "Exception for message to " +
+       fun generateMessage(sendingProperties: AMQP.BasicProperties) = "Exception while receiving reply to " +
           "${sendingProperties.wrabbitHeader(WrabbitHeader.TOPIC)}::${sendingProperties.wrabbitHeader(WrabbitHeader.EVENT)}." +
-          " Check nested exceptions for details"
+          " Check nested exceptions for details."
    }
 }

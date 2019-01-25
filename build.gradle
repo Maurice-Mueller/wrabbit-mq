@@ -49,7 +49,7 @@ dependencies {
    compile "com.rabbitmq:amqp-client:$amqp_client_version"
    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
    compile "org.slf4j:slf4j-api:$slf4j_version"
-   compile "ch.qos.logback:logback-classic:$logback_version"
+   testCompile "ch.qos.logback:logback-classic:$logback_version"
    testCompile "org.junit.jupiter:junit-jupiter-engine:5.0.0"
    testCompile "org.junit.jupiter:junit-jupiter-api:5.0.0"
    testCompile group: 'org.easytesting', name: 'fest-assert', version: '1.4'

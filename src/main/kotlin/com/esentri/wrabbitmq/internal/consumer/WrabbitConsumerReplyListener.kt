@@ -10,7 +10,7 @@ class WrabbitConsumerReplyListener<MESSAGE_TYPE>(exculsiveChannel: Channel,
                                                  val future: CompletableFuture<MESSAGE_TYPE>)
    : WrabbitConsumerBase(exculsiveChannel) {
    override fun handleDelivery(consumerTag: String?, envelope: Envelope, properties: AMQP.BasicProperties?, body: ByteArray?) {
-      val message: WrabbitReplyWrapperMessage<MESSAGE_TYPE> = WrabbitObjectConverter.byteArrayToObject(body!!)
+      val message: WrabbitReplyMessage<MESSAGE_TYPE> = WrabbitObjectConverter.byteArrayToObject(body!!)
       if (message.value != null) {
          future.complete(message.value)
          return
