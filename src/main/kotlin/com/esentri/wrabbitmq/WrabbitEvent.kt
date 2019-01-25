@@ -27,7 +27,7 @@ open class WrabbitEvent<MESSAGE : Serializable>(val wrabbitTopic: WrabbitTopic, 
    }
 
    fun listener(group: String = UUID.randomUUID().toString(), listener: WrabbitListenerWithContext<MESSAGE>) {
-      val newChannel = NewChannel()
+      val newChannel = ThreadChannel()
       val queueName = "${wrabbitTopic.topicName}.$eventName.LISTENER.$group"
       newChannel.queueDeclare(queueName, true, false, false, emptyMap())
       newChannel.queueBind(queueName, wrabbitTopic.topicName, "", standardListenerHeadersForEvent)

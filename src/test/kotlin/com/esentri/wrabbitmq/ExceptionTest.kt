@@ -27,7 +27,7 @@ class ExceptionTest {
          countDownLatch.countDown()
          null
       }
-      countDownLatch.await()
+      Await(countDownLatch)
    }
 
    @Test
@@ -44,7 +44,7 @@ class ExceptionTest {
          countDownLatch.countDown()
          null
       }
-      countDownLatch.await()
+      Await(countDownLatch)
    }
 
    @Test
@@ -52,7 +52,7 @@ class ExceptionTest {
       val countDownLatch = CountDownLatch(1)
       val exceptionMessage = "hello world"
       val event = newEventWithReply<String, String>()
-      event.replier { it ->
+      event.replier { _ ->
          throw TestException(exceptionMessage)
       }
       event.sendAndReceive("hello", 10000).thenAccept {

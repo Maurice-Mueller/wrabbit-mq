@@ -13,6 +13,7 @@ open class WrabbitEventWithReply<MESSAGE: Serializable, RETURN: Serializable>(
 
    override fun messageBuilder() = WrabbitMessageBuilderReplier<MESSAGE, RETURN>(wrabbitTopic.topicName, super.standardSendingProperties)
 
+   @JvmOverloads
    fun sendAndReceive(message: MESSAGE, timeoutMS: Long = WrabbitReplyTimeoutMS()): CompletableFuture<RETURN> =
       SendAndReceiveMessage(wrabbitTopic.topicName,
          super.standardSendingProperties,
@@ -24,7 +25,7 @@ open class WrabbitEventWithReply<MESSAGE: Serializable, RETURN: Serializable>(
    }
 
    fun replier(replier: WrabbitReplierWithContext<MESSAGE, RETURN>) {
-      val newChannel = NewChannel()
+      val newChannel = ThreadChannel()
       val queueName = "${wrabbitTopic.topicName}.$eventName.REPLIER"
       newChannel.queueDeclare(queueName, true, true, false, emptyMap())
       newChannel.queueBind(queueName, wrabbitTopic.topicName, "", replierHeadersForEvent())

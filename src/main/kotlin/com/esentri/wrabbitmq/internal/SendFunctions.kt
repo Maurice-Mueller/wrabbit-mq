@@ -1,6 +1,6 @@
 package com.esentri.wrabbitmq.internal
 
-import com.esentri.wrabbitmq.NewChannel
+import com.esentri.wrabbitmq.ThreadChannel
 import com.esentri.wrabbitmq.exceptions.WrabbitBasicReplyException
 import com.esentri.wrabbitmq.internal.consumer.WrabbitConsumerReplyListener
 import com.esentri.wrabbitmq.internal.converter.WrabbitObjectConverter
@@ -11,9 +11,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 fun SendMessage(topicName: String, sendingProperties: AMQP.BasicProperties, message: Any) {
-   val newChannel = NewChannel()
+   val newChannel = ThreadChannel()
    newChannel.basicPublish(topicName, "", sendingProperties, WrabbitObjectConverter.objectToByteArray(message))
-   newChannel.close()
 }
 
 fun <RETURN> SendAndReceiveMessage(
@@ -23,9 +22,7 @@ fun <RETURN> SendAndReceiveMessage(
    timeoutMS: Long
 ): CompletableFuture<RETURN> {
 
-   val replyChannel = NewChannel()
-   val replyQueue = replyChannel.queueDeclare(UUID.randomUUID().toString(), false, false, true, emptyMap()).queue
-   replyChannel.close()
+   val replyQueue = ThreadChannel().queueDeclare(UUID.randomUUID().toString(), false, false, true, emptyMap()).queue
 
    SendMessage(topicName, sendingProperties.builder().replyTo(replyQueue).build(), message)
 
@@ -40,7 +37,7 @@ fun <RETURN> SendAndReceiveMessage(
 }
 
 private fun <RETURN> WaitForMessage(queueName: String, timeoutMS: Long): CompletableFuture<RETURN> {
-   val replyChannel = NewChannel()
+   val replyChannel = ThreadChannel()
    val replyFuture = CompletableFuture<RETURN>()
    val consumer = WrabbitConsumerReplyListener<RETURN>(replyChannel, replyFuture)
    replyChannel.basicConsume(queueName, true, consumer)

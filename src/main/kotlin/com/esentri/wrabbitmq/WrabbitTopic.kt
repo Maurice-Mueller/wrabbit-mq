@@ -22,7 +22,7 @@ open class WrabbitTopic {
    }
 
    fun listener(group: String = UUID.randomUUID().toString(), listener: WrabbitListenerWithContext<Any>) {
-      val newChannel = NewChannel()
+      val newChannel = ThreadChannel()
       val queueName = "$topicName.LISTENER.$group"
       newChannel.queueDeclare(queueName, true, true, false, emptyMap())
       newChannel.queueBind(queueName, topicName, "", standardListenerHeadersForTopic)

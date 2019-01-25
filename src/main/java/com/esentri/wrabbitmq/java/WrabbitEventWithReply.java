@@ -1,13 +1,11 @@
 package com.esentri.wrabbitmq.java;
 
-import com.esentri.wrabbitmq.WrabbitConfigKt;
 import com.esentri.wrabbitmq.WrabbitTopic;
 import kotlin.Unit;
 
 import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -39,10 +37,6 @@ public class WrabbitEventWithReply<MESSAGE extends Serializable, REPLY extends S
          listener.accept(context, it);
          return Unit.INSTANCE;
       });
-   }
-
-   public CompletableFuture<REPLY> sendAndReceive(MESSAGE message) {
-      return this.sendAndReceive(message, WrabbitConfigKt.WrabbitReplyTimeoutMS());
    }
 
 }

@@ -8,22 +8,22 @@ import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Envelope
 
-// TODO replace with new NewChannel method
+// TODO replace with new ThreadChannel method
 class WrabbitConsumerReplier<MESSAGE_TYPE, RETURN_TYPE>(channel: Channel,
                                                         val wrabbitReplier: WrabbitReplierWithContext<MESSAGE_TYPE, RETURN_TYPE>)
    : WrabbitConsumerBase(channel) {
 
-   override fun handleDelivery(consumerTag: String?, envelope: Envelope, properties: AMQP.BasicProperties?, body: ByteArray?) {
-      val message: MESSAGE_TYPE = WrabbitObjectConverter.byteArrayToObject(body!!)
+   override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
+      val message: MESSAGE_TYPE = WrabbitObjectConverter.byteArrayToObject(body)
       try {
-         val result = wrabbitReplier(properties!!.headers, message)
+         val result = wrabbitReplier(properties.headers, message)
          sendAnswer(properties, responseByteArray(result))
       } catch (e: Exception) {
          ReplyLogger.error("Error while processing received data on {}::{}",
-            properties!!.headers[WrabbitHeader.TOPIC.key],
-            properties!!.headers[WrabbitHeader.EVENT.key],
+            properties.headers[WrabbitHeader.TOPIC.key],
+            properties.headers[WrabbitHeader.EVENT.key],
             e)
-         sendAnswer(properties!!, responseByteArray(e))
+         sendAnswer(properties, responseByteArray(e))
       } finally {
          super.getChannel().basicAck(envelope.deliveryTag, false)
       }
