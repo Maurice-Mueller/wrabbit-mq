@@ -22,7 +22,7 @@ fun WrabbitUsername() = getConfig("wrabbit.username", "spring.rabbitmq.username"
 fun WrabbitPassword() = getConfig("wrabbit.password","spring.rabbitmq.password", WrabbitDefaultPassword)
 fun WrabbitTimeout(): Int = getConfig("wrabbit.timeout", "spring.rabbitmq.connection-timeout", WrabbitDefaultTimeout).toInt()
 fun WrabbitHeartBeat(): Int = getConfig("wrabbit.heartbeat", "spring.rabbitmq.requested-heartbeat", WrabbitDefaultHeartBeat).toInt()
-fun WrabbitReplyTimeout(): Long = getConfig("wrabbit.reply-timeout-ms", "spring.rabbitmq.reply-timeout-ms",
+fun WrabbitReplyTimeoutMS(): Long = getConfig("wrabbit.reply-timeout-ms", "spring.rabbitmq.reply-timeout-ms",
    WrabbitDefaultReplyTimeoutMS).toLong()
 
 

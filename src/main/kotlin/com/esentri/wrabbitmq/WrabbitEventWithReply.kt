@@ -13,10 +13,11 @@ open class WrabbitEventWithReply<MESSAGE: Serializable, RETURN: Serializable>(
 
    override fun messageBuilder() = WrabbitMessageBuilderReplier<MESSAGE, RETURN>(wrabbitTopic.topicName, super.standardSendingProperties)
 
-   fun sendAndReceive(message: MESSAGE, timeoutMS: Long = WrabbitReplyTimeout()): CompletableFuture<RETURN> =
+   fun sendAndReceive(message: MESSAGE, timeoutMS: Long = WrabbitReplyTimeoutMS()): CompletableFuture<RETURN> =
       SendAndReceiveMessage(wrabbitTopic.topicName,
          super.standardSendingProperties,
-         message)
+         message,
+         timeoutMS)
 
    fun replier(replier: WrabbitReplier<MESSAGE, RETURN>) {
       this.replier { _, message ->  replier(message)}

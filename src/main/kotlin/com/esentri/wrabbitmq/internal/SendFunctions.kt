@@ -1,7 +1,7 @@
 package com.esentri.wrabbitmq.internal
 
 import com.esentri.wrabbitmq.NewChannel
-import com.esentri.wrabbitmq.exceptions.NoOneRepliedException
+import com.esentri.wrabbitmq.exceptions.WrabbitBasicReplyException
 import com.esentri.wrabbitmq.internal.consumer.WrabbitConsumerReplyListener
 import com.esentri.wrabbitmq.internal.converter.WrabbitObjectConverter
 import com.rabbitmq.client.AMQP
@@ -19,7 +19,9 @@ fun SendMessage(topicName: String, sendingProperties: AMQP.BasicProperties, mess
 fun <RETURN> SendAndReceiveMessage(
    topicName: String,
    sendingProperties: AMQP.BasicProperties,
-   message: Any): CompletableFuture<RETURN> {
+   message: Any,
+   timeoutMS: Long
+): CompletableFuture<RETURN> {
 
    val replyChannel = NewChannel()
    val replyQueue = replyChannel.queueDeclare().queue
@@ -30,20 +32,17 @@ fun <RETURN> SendAndReceiveMessage(
       WrabbitObjectConverter.objectToByteArray(message))
    sendChannel.close()
    val replyFuture = CompletableFuture<RETURN>()
-   val consumer = WrabbitConsumerReplyListener<RETURN>(replyChannel, sendingProperties
-   ) {
-      replyFuture.complete(it)
-   }
+   val consumer = WrabbitConsumerReplyListener<RETURN>(replyChannel, replyFuture)
    replyChannel.basicConsume(replyQueue, true, consumer)
-   replyFuture.orTimeout(1, TimeUnit.SECONDS)
+   replyFuture.orTimeout(timeoutMS, TimeUnit.MILLISECONDS)
    val returnFuture = CompletableFuture<RETURN>()
-   replyFuture.whenComplete(BiConsumer { value: RETURN?, _: Throwable? ->
+
+   replyFuture.whenComplete(BiConsumer { value: RETURN?, exception: Throwable? ->
       if (value != null) {
          returnFuture.complete(value)
          return@BiConsumer
       }
-      replyChannel.basicCancel(consumer.consumerTag)
-      returnFuture.completeExceptionally(NoOneRepliedException(sendingProperties))
+      returnFuture.completeExceptionally(WrabbitBasicReplyException(sendingProperties, exception!!))
    })
    return returnFuture
 }

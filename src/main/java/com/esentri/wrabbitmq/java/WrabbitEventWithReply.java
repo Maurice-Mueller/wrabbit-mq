@@ -42,7 +42,7 @@ public class WrabbitEventWithReply<MESSAGE extends Serializable, REPLY extends S
    }
 
    public CompletableFuture<REPLY> sendAndReceive(MESSAGE message) {
-      return this.sendAndReceive(message, WrabbitConfigKt.WrabbitReplyTimeout());
+      return this.sendAndReceive(message, WrabbitConfigKt.WrabbitReplyTimeoutMS());
    }
 
 }

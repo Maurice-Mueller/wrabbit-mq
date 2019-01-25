@@ -1,5 +1,7 @@
 package com.esentri.wrabbitmq
 
+import com.esentri.wrabbitmq.exceptions.WrabbitBasicReplyException
+import com.esentri.wrabbitmq.testhelper.TestException
 import org.fest.assertions.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.io.Serializable
@@ -18,6 +20,7 @@ class ExceptionTest {
       event.sendAndReceive("hello").thenAccept {
          countDownLatch.countDown()
       }.exceptionally {
+         assertThat(it.cause).isInstanceOf(WrabbitBasicReplyException::class.java)
          assertThat(it.message)
             .contains(event.eventName)
             .contains(topic.topicName)
@@ -34,6 +37,7 @@ class ExceptionTest {
       event.sendAndReceive("hello", 10).thenAccept {
          countDownLatch.countDown()
       }.exceptionally {
+         assertThat(it.cause).isInstanceOf(WrabbitBasicReplyException::class.java)
          assertThat(it.message)
             .contains(event.eventName)
             .contains(topic.topicName)
@@ -41,5 +45,26 @@ class ExceptionTest {
          null
       }
       countDownLatch.await()
+   }
+
+   @Test
+   fun replierThrowsException() {
+      val countDownLatch = CountDownLatch(1)
+      val exceptionMessage = "hello world"
+      val event = newEventWithReply<String, String>()
+      event.replier { it ->
+         throw TestException(exceptionMessage)
+      }
+      event.sendAndReceive("hello", 10000).thenAccept {
+         // never happens
+      }.exceptionally {
+         assertThat(it.cause).isInstanceOf(WrabbitBasicReplyException::class.java)
+         assertThat(it.cause!!.cause).isInstanceOf(TestException::class.java)
+         assertThat(it.cause!!.cause).hasMessage(exceptionMessage)
+         countDownLatch.countDown()
+         null
+      }
+
+      Await(countDownLatch)
    }
 }
