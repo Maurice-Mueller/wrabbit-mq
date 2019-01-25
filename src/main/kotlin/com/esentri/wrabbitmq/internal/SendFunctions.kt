@@ -8,6 +8,7 @@ import com.rabbitmq.client.AMQP
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.function.BiConsumer
 
 fun SendMessage(topicName: String, sendingProperties: AMQP.BasicProperties, message: Any) {
@@ -24,25 +25,34 @@ fun <RETURN> SendAndReceiveMessage(
 ): CompletableFuture<RETURN> {
 
    val replyChannel = NewChannel()
-   val replyQueue = replyChannel.queueDeclare().queue
-   val correlationID = UUID.randomUUID().toString()
-   val sendChannel = NewChannel()
-   sendChannel.basicPublish(topicName, "",
-      sendingProperties.builder().correlationId(correlationID).replyTo(replyQueue).build(),
-      WrabbitObjectConverter.objectToByteArray(message))
-   sendChannel.close()
-   val replyFuture = CompletableFuture<RETURN>()
-   val consumer = WrabbitConsumerReplyListener<RETURN>(replyChannel, replyFuture)
-   replyChannel.basicConsume(replyQueue, true, consumer)
-   replyFuture.orTimeout(timeoutMS, TimeUnit.MILLISECONDS)
-   val returnFuture = CompletableFuture<RETURN>()
+   val replyQueue = replyChannel.queueDeclare(UUID.randomUUID().toString(), false, false, true, emptyMap()).queue
+   replyChannel.close()
 
-   replyFuture.whenComplete(BiConsumer { value: RETURN?, exception: Throwable? ->
+   SendMessage(topicName, sendingProperties.builder().replyTo(replyQueue).build(), message)
+
+   val returnFuture = CompletableFuture<RETURN>()
+   waitForMessage<RETURN>(replyQueue, timeoutMS).whenComplete(BiConsumer { value: RETURN?, exception: Throwable? ->
       if (value != null) {
          returnFuture.complete(value)
          return@BiConsumer
       }
+
       returnFuture.completeExceptionally(WrabbitBasicReplyException(sendingProperties, exception!!))
    })
+
    return returnFuture
+}
+
+private fun <RETURN> waitForMessage(queueName: String, timeoutMS: Long): CompletableFuture<RETURN> {
+   val replyChannel = NewChannel()
+   val replyFuture = CompletableFuture<RETURN>()
+   val consumer = WrabbitConsumerReplyListener<RETURN>(replyChannel, replyFuture)
+   replyChannel.basicConsume(queueName, true, consumer)
+   replyFuture.orTimeout(timeoutMS, TimeUnit.MILLISECONDS).exceptionally {
+      if (it is TimeoutException) {
+         replyChannel.basicCancel(consumer.consumerTag)
+      }
+      null
+   }
+   return replyFuture
 }
