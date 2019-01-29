@@ -234,13 +234,5 @@ dockerCompose {
    }
 }
 
-task startRabbit() {
-   dependsOn rabbitComposeUp
-}
-
-task removeRabbit() {
-   dependsOn rabbitComposeDownForced
-}
-
-test.dependsOn startRabbit
-test.finalizedBy removeRabbit
+test.dependsOn rabbitComposeUp
+test.finalizedBy rabbitComposeDownForced
